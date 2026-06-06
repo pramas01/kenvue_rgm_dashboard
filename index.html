@@ -7,411 +7,126 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    /* ── Reset ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ── Tokens ─────────────────────────────────────────── */
     :root {
-      --bg:          #F4F3EE;
-      --surface:     #FFFFFF;
-      --surface-2:   #EEEDEA;
-      --navy:        #1C2B3A;
-      --navy-mid:    #2C4A6A;
-      --text:        #111827;
-      --text-2:      #4B5E6E;
-      --text-3:      #9BABB8;
-      --border:      #DDE3EC;
-      --border-2:    #EDF1F7;
-      /* status */
-      --live-dot:    #1A6B46;  --live-bg:   #D1FAE5;  --live-text:   #065F46;
-      --prog-dot:    #B45309;  --prog-bg:   #FEF3C7;  --prog-text:   #78350F;
-      --plan-dot:    #1D4ED8;  --plan-bg:   #DBEAFE;  --plan-text:   #1E3A8A;
-      --pend-dot:    #6B7280;  --pend-bg:   #F3F4F6;  --pend-text:   #374151;
-      --r:           10px;
-      --r-lg:        14px;
+      --bg:        #F4F3EE;  --surface:   #FFFFFF;  --surface-2: #EEEDEA;
+      --navy:      #1C2B3A;  --navy-mid:  #2C4A6A;
+      --text:      #111827;  --text-2:    #4B5E6E;  --text-3:    #9BABB8;
+      --border:    #DDE3EC;  --border-2:  #EDF1F7;
+      --live-dot:  #1A6B46;  --live-bg:   #D1FAE5;  --live-text:  #065F46;
+      --prog-dot:  #B45309;  --prog-bg:   #FEF3C7;  --prog-text:  #78350F;
+      --plan-dot:  #1D4ED8;  --plan-bg:   #DBEAFE;  --plan-text:  #1E3A8A;
+      --dela-dot:  #B91C1C;  --dela-bg:   #FEE2E2;  --dela-text:  #991B1B;
+      --pend-dot:  #6B7280;  --pend-bg:   #F3F4F6;  --pend-text:  #374151;
+      --r: 10px;  --r-lg: 14px;
     }
+    body { font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text); font-size:14px; line-height:1.5; min-height:100vh; }
+    button { font-family:inherit; }
+    .container { max-width:1100px; margin:0 auto; padding:40px 28px 72px; }
 
-    /* ── Base ───────────────────────────────────────────── */
-    body {
-      font-family: 'DM Sans', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-    button { font-family: inherit; }
+    /* Header */
+    .header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:10px; flex-wrap:wrap; }
+    .logo { font-family:'DM Serif Display',Georgia,serif; font-size:28px; color:var(--navy); letter-spacing:-0.4px; line-height:1.1; }
+    .subtitle { font-size:11px; color:var(--text-3); margin-top:5px; letter-spacing:0.4px; text-transform:uppercase; }
 
-    /* ── Container ──────────────────────────────────────── */
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 40px 28px 72px;
-    }
+    /* Connection bar */
+    .conn-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+    .conn-status { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:500; }
+    .s-embedded { background:#F3F4F6; color:#374151; }
+    .s-loading  { background:#FEF3C7; color:#78350F; }
+    .s-live     { background:#D1FAE5; color:#065F46; }
+    .s-error    { background:#FEE2E2; color:#991B1B; }
+    .refresh-btn { font-size:11px; padding:4px 10px; border-radius:999px; border:0.5px solid var(--border); background:var(--surface); color:var(--text-2); cursor:pointer; display:none; }
+    .refresh-btn:hover { background:var(--surface-2); }
 
-    /* ── Header ─────────────────────────────────────────── */
-    .header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-    }
-    .logo {
-      font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 28px;
-      color: var(--navy);
-      letter-spacing: -0.4px;
-      line-height: 1.1;
-    }
-    .subtitle {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 5px;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-    }
+    /* Seg toggle */
+    .seg { display:inline-flex; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:3px; flex-shrink:0; }
+    .seg button { font-size:12px; font-weight:500; padding:6px 16px; border-radius:7px; border:none; background:none; cursor:pointer; color:var(--text-2); transition:background .18s,color .18s; }
+    .seg button.on { background:var(--navy); color:#fff; }
 
-    /* ── Segment toggle ─────────────────────────────────── */
-    .seg {
-      display: inline-flex;
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--r);
-      padding: 3px;
-      flex-shrink: 0;
-    }
-    .seg button {
-      font-size: 12px;
-      font-weight: 500;
-      padding: 6px 16px;
-      border-radius: 7px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--text-2);
-      transition: background .18s, color .18s;
-    }
-    .seg button.on {
-      background: var(--navy);
-      color: #fff;
-    }
+    /* Tabs */
+    .ptabs { display:flex; gap:0; border-bottom:1.5px solid var(--border); margin-bottom:22px; overflow-x:auto; }
+    .ptabs::-webkit-scrollbar { display:none; }
+    .ptab { font-size:13px; font-weight:400; padding:10px 20px; border:none; background:none; cursor:pointer; color:var(--text-2); white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-1.5px; transition:color .14s; }
+    .ptab:hover:not(.on) { color:var(--text); }
+    .ptab.on { color:var(--navy); font-weight:600; border-bottom-color:var(--navy); }
 
-    /* ── Product tabs ───────────────────────────────────── */
-    .ptabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1.5px solid var(--border);
-      margin-bottom: 22px;
-      overflow-x: auto;
-    }
-    .ptabs::-webkit-scrollbar { display: none; }
-    .ptab {
-      font-size: 13px;
-      font-weight: 400;
-      padding: 10px 20px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--text-2);
-      white-space: nowrap;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1.5px;
-      transition: color .14s;
-    }
-    .ptab:hover:not(.on) { color: var(--text); }
-    .ptab.on {
-      color: var(--navy);
-      font-weight: 600;
-      border-bottom-color: var(--navy);
-    }
+    /* Metrics */
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
+    .metric { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:13px 15px; }
+    .m-label { font-size:11px; color:var(--text-2); display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+    .m-val { font-size:26px; font-weight:600; color:var(--navy); line-height:1; }
 
-    /* ── Metrics strip ──────────────────────────────────── */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 22px;
-    }
-    .metric {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--r);
-      padding: 13px 15px;
-    }
-    .m-label {
-      font-size: 11px;
-      color: var(--text-2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 5px;
-    }
-    .m-val {
-      font-size: 26px;
-      font-weight: 600;
-      color: var(--navy);
-      line-height: 1;
-    }
+    /* Zones */
+    .zones { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; align-items:start; }
+    .zone { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r-lg); overflow:hidden; opacity:0; animation:fadeUp .32s ease forwards; }
+    .zone-head { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; background:var(--surface-2); border-bottom:0.5px solid var(--border); }
+    .zone-left { display:flex; align-items:baseline; gap:7px; }
+    .zone-code { font-size:13px; font-weight:600; color:var(--navy); }
+    .zone-name { font-size:11px; color:var(--text-3); }
+    .zone-count { font-size:10px; color:var(--text-3); }
+    .zone-row { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:0.5px solid var(--border-2); cursor:pointer; transition:background .12s; }
+    .zone-row:last-child { border-bottom:none; }
+    .zone-row:hover { background:#F7F8FC; }
+    .rname { flex:1; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rright { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .rstat { font-size:11px; color:var(--text-2); }
+    .rdate { font-size:11px; color:var(--text-2); min-width:72px; text-align:right; }
 
-    /* ── Zone grid ──────────────────────────────────────── */
-    .zones {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 12px;
-      align-items: start;
-    }
-    .zone {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--r-lg);
-      overflow: hidden;
-      opacity: 0;
-      animation: fadeUp .32s ease forwards;
-    }
-    .zone-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 16px;
-      background: var(--surface-2);
-      border-bottom: 0.5px solid var(--border);
-    }
-    .zone-left {
-      display: flex;
-      align-items: baseline;
-      gap: 7px;
-    }
-    .zone-code {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--navy);
-    }
-    .zone-name {
-      font-size: 11px;
-      color: var(--text-3);
-    }
-    .zone-count {
-      font-size: 10px;
-      color: var(--text-3);
-    }
-    .zone-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 16px;
-      border-bottom: 0.5px solid var(--border-2);
-      cursor: pointer;
-      transition: background .12s;
-    }
-    .zone-row:last-child { border-bottom: none; }
-    .zone-row:hover { background: #F7F8FC; }
-    .rname {
-      flex: 1;
-      font-size: 12.5px;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .rright {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .rstat  { font-size: 11px; color: var(--text-2); }
-    .rdate  { font-size: 11px; color: var(--text-2); min-width: 72px; text-align: right; }
+    /* Dots & pills */
+    .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .d-live{background:var(--live-dot)} .d-prog{background:var(--prog-dot)} .d-plan{background:var(--plan-dot)}
+    .d-dela{background:var(--dela-dot)} .d-pend{background:var(--pend-dot)}
+    .pill { font-size:11px; font-weight:500; padding:2px 9px; border-radius:999px; display:inline-block; }
+    .pl-live{background:var(--live-bg);color:var(--live-text)} .pl-prog{background:var(--prog-bg);color:var(--prog-text)}
+    .pl-plan{background:var(--plan-bg);color:var(--plan-text)} .pl-dela{background:var(--dela-bg);color:var(--dela-text)}
+    .pl-pend{background:var(--pend-bg);color:var(--pend-text)}
 
-    /* ── Dots ───────────────────────────────────────────── */
-    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .d-live { background: var(--live-dot); }
-    .d-prog { background: var(--prog-dot); }
-    .d-plan { background: var(--plan-dot); }
-    .d-pend { background: var(--pend-dot); }
+    /* Legend */
+    .legend { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:22px; padding-top:16px; border-top:0.5px solid var(--border); }
+    .li { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--text-2); }
+    .li-hint { margin-left:auto; font-size:11px; color:var(--text-3); font-style:italic; }
 
-    /* ── Pills ──────────────────────────────────────────── */
-    .pill { font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 999px; display: inline-block; }
-    .pl-live { background: var(--live-bg); color: var(--live-text); }
-    .pl-prog { background: var(--prog-bg); color: var(--prog-text); }
-    .pl-plan { background: var(--plan-bg); color: var(--plan-text); }
-    .pl-pend { background: var(--pend-bg); color: var(--pend-text); }
+    /* What's next */
+    .next-wrap { padding-top:4px; }
+    .ngroup { margin-bottom:20px; }
+    .nwhen { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+    .nln { flex:1; height:0.5px; background:var(--border); }
+    .npast { font-size:10px; font-weight:400; color:var(--prog-text); }
+    .nrow { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); margin-bottom:7px; cursor:pointer; transition:border-color .12s; }
+    .nrow:hover { border-color:var(--navy-mid); }
+    .nmain { flex:1; font-size:12.5px; color:var(--text); }
+    .nmkt { color:var(--text-3); }
+    .nnote { font-size:11px; color:var(--text-3); }
+    .nprod { font-size:10px; font-weight:500; padding:2px 9px; border-radius:999px; background:var(--surface-2); color:var(--text-2); white-space:nowrap; }
 
-    /* ── Legend ─────────────────────────────────────────── */
-    .legend {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-      padding-top: 16px;
-      border-top: 0.5px solid var(--border);
-    }
-    .li { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
-    .li-hint { margin-left: auto; font-size: 11px; color: var(--text-3); font-style: italic; }
+    /* Overlay */
+    .overlay { position:fixed; inset:0; background:rgba(10,20,30,.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:100; display:flex; align-items:flex-start; justify-content:center; padding:64px 16px; animation:overlayIn .2s ease; }
+    .card { background:var(--surface); border-radius:var(--r-lg); width:100%; max-width:420px; padding:26px; box-shadow:0 24px 64px rgba(0,0,0,.18); animation:cardIn .24s ease; }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:2px; }
+    .card-name { font-family:'DM Serif Display',serif; font-size:21px; color:var(--navy); line-height:1.2; }
+    .xbtn { border:none; background:none; cursor:pointer; font-size:17px; color:var(--text-3); line-height:1; padding:3px 6px; border-radius:6px; flex-shrink:0; transition:background .12s,color .12s; }
+    .xbtn:hover { background:var(--surface-2); color:var(--text); }
+    .card-meta { font-size:11.5px; color:var(--text-2); margin-bottom:22px; }
+    .tl { position:relative; }
+    .tl-item { display:flex; gap:14px; position:relative; padding-bottom:18px; }
+    .tl-item:last-child { padding-bottom:0; }
+    .tl-line { position:absolute; left:6px; top:14px; bottom:0; width:1.5px; background:var(--border); }
+    .tl-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; margin-top:1px; z-index:1; border:2.5px solid var(--surface); }
+    .tn-done{background:var(--live-dot)} .tn-cur{background:var(--prog-dot);box-shadow:0 0 0 3px rgba(180,83,9,.15)} .tn-todo{background:var(--surface-2);border:2px solid var(--border)}
+    .tl-body { flex:1; display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+    .tl-label{font-size:12.5px;color:var(--text)} .tl-label.muted{color:var(--text-3)} .tl-date{font-size:11px;color:var(--text-2);white-space:nowrap}
+    .card-note { margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border); font-size:11.5px; color:var(--text-2); line-height:1.6; }
 
-    /* ── What's next ────────────────────────────────────── */
-    .next-wrap { padding-top: 4px; }
-    .ngroup { margin-bottom: 20px; }
-    .nwhen {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--navy);
-      margin-bottom: 8px;
-    }
-    .nln { flex: 1; height: 0.5px; background: var(--border); }
-    .npast { font-size: 10px; font-weight: 400; color: var(--prog-text); }
-    .nrow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--r);
-      margin-bottom: 7px;
-      cursor: pointer;
-      transition: border-color .12s;
-    }
-    .nrow:hover { border-color: var(--navy-mid); }
-    .nmain { flex: 1; font-size: 12.5px; color: var(--text); }
-    .nmkt  { color: var(--text-3); }
-    .nnote { font-size: 11px; color: var(--text-3); }
-    .nprod {
-      font-size: 10px;
-      font-weight: 500;
-      padding: 2px 9px;
-      border-radius: 999px;
-      background: var(--surface-2);
-      color: var(--text-2);
-      white-space: nowrap;
-    }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes overlayIn{ from{opacity:0} to{opacity:1} }
+    @keyframes cardIn   { from{opacity:0;transform:translateY(16px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
 
-    /* ── Overlay ────────────────────────────────────────── */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 20, 30, 0.55);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 100;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 64px 16px;
-      animation: overlayIn .2s ease;
-    }
-    .card {
-      background: var(--surface);
-      border-radius: var(--r-lg);
-      width: 100%;
-      max-width: 420px;
-      padding: 26px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.18);
-      animation: cardIn .24s ease;
-    }
-    .card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 2px;
-    }
-    .card-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 21px;
-      color: var(--navy);
-      line-height: 1.2;
-    }
-    .xbtn {
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 17px;
-      color: var(--text-3);
-      line-height: 1;
-      padding: 3px 6px;
-      border-radius: 6px;
-      flex-shrink: 0;
-      transition: background .12s, color .12s;
-    }
-    .xbtn:hover { background: var(--surface-2); color: var(--text); }
-    .card-meta {
-      font-size: 11.5px;
-      color: var(--text-2);
-      margin-bottom: 22px;
-    }
-
-    /* ── Timeline ───────────────────────────────────────── */
-    .tl { position: relative; }
-    .tl-item {
-      display: flex;
-      gap: 14px;
-      position: relative;
-      padding-bottom: 18px;
-    }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-line {
-      position: absolute;
-      left: 6px; top: 14px; bottom: 0;
-      width: 1.5px;
-      background: var(--border);
-    }
-    .tl-dot {
-      width: 13px; height: 13px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 1px;
-      z-index: 1;
-      border: 2.5px solid var(--surface);
-    }
-    .tn-done { background: var(--live-dot); }
-    .tn-cur  { background: var(--prog-dot); box-shadow: 0 0 0 3px rgba(180,83,9,.15); }
-    .tn-todo { background: var(--surface-2); border: 2px solid var(--border); }
-    .tl-body {
-      flex: 1;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .tl-label       { font-size: 12.5px; color: var(--text); }
-    .tl-label.muted { color: var(--text-3); }
-    .tl-date        { font-size: 11px; color: var(--text-2); white-space: nowrap; }
-    .card-note {
-      margin-top: 18px;
-      padding-top: 14px;
-      border-top: 0.5px solid var(--border);
-      font-size: 11.5px;
-      color: var(--text-2);
-      line-height: 1.6;
-    }
-
-    /* ── Animations ─────────────────────────────────────── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes overlayIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(16px) scale(.98); }
-      to   { opacity: 1; transform: translateY(0)    scale(1);   }
-    }
-
-    /* ── Responsive ─────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .container { padding: 24px 16px 56px; }
-      .metrics   { grid-template-columns: repeat(2, 1fr); }
-      .header    { flex-direction: column; align-items: flex-start; }
-      .li-hint   { display: none; }
+    @media(max-width:640px) {
+      .container{padding:24px 16px 56px} .metrics{grid-template-columns:repeat(2,1fr)}
+      .header{flex-direction:column;align-items:flex-start} .li-hint{display:none}
     }
   </style>
 </head>
@@ -420,7 +135,7 @@
   <header class="header">
     <div>
       <div class="logo">Kenvue RGM</div>
-      <div class="subtitle">Delivery program &nbsp;·&nbsp; Data as of <span id="asOf"></span></div>
+      <div class="subtitle">Delivery program &nbsp;·&nbsp; <span id="asOf"></span></div>
     </div>
     <div class="seg">
       <button id="btn-board" class="on" onclick="setView('board')">By product</button>
@@ -428,227 +143,265 @@
     </div>
   </header>
 
+  <div class="conn-bar">
+    <span id="conn-status" class="conn-status s-embedded">Embedded data · Week ending 6/5</span>
+    <button id="refresh-btn" class="refresh-btn" onclick="fetchFromGitHub()">&#8635; Refresh</button>
+  </div>
+
   <nav class="ptabs" id="ptabs"></nav>
   <div id="main"></div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════
-//  DATA  — update this block weekly from the Excel tracker
-//  File:   RGM_Program_Tracker_Kenvue_v1.xlsx · Tracker sheet
-//  Format: [product, market, customer, status, phase,
-//           discovery, build, uat, golive, notes]
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+//  CONFIG — update file name here if you rename the Excel
+// ════════════════════════════════════════════════════════════════════
+const GITHUB_RAW = 'https://raw.githubusercontent.com/pramas01/kenvue_rgm_dashboard/main/rgm_program_update_June.xlsx';
+const SHEET_NAMES = ['POM','TPO','PEA','US Customer PnL','Pricing'];
 
-const LAST_UPDATED = 'Jun 2026';
+// ════════════════════════════════════════════════════════════════════
+//  EMBEDDED FALLBACK — reflects week ending 6/5
+//  Updated automatically when GitHub fetch succeeds.
+//  Edit this as a manual fallback if needed.
+//  Format: [Market, Retailer, Status, Phase, Disc, Build, UAT, Golive, Notes]
+// ════════════════════════════════════════════════════════════════════
+const LAST_UPDATED = 'Week ending 6/5';
 
-const RAW = [
-  // ── POM — regional rollout ──────────────────────────────────
-  ['POM','NA',   'Regional rollout','Live',        'Live',                '','','',            'Mar 2026',     'Live in production.'],
-  ['POM','APAC', 'Regional rollout','Live',        'Live',                '','','',            '23 Mar 2026',  'Live in production.'],
-  ['POM','EMEA', 'Regional rollout','Live',        'Live',                '','','',            '26 Mar 2026',  'Live in production.'],
-  ['POM','LATAM','Regional rollout','Pending',     'UAT',                 '','','',            'TBD',          'Pending business sign-off.'],
-
-  // ── TPO — by customer ──────────────────────────────────────
-  ['TPO','CA',  'Shoppers Drug Mart','Pending',    'Discovery',           '','','',            'TBD',          'Follows PEA go-live.'],
-  ['TPO','DE',  'Rossmann',          'Planned',    'Build & integration', '','','',            'Sep 2026',     'On track.'],
-  ['TPO','DE',  'Edeka',             'Planned',    'Build & integration', '','','',            'Sep 2026',     'On track.'],
-  ['TPO','DE',  'Rewe',              'Planned',    'Build & integration', '','','',            'Sep 2026',     'On track.'],
-  ['TPO','AUS', 'Coles',             'Pending',    'Discovery',           '','','',            'TBD',          'Scope to be confirmed.'],
-  ['TPO','UK',  'Boots',             'Planned',    'Build & integration', '','','',            'Sep 2026',     'Planned on schedule.'],
-  ['TPO','UK',  'Asda',              'Planned',    'Build & integration', '','','',            'Sep 2026',     'Planned on schedule.'],
-  ['TPO','UK',  'Tesco',             'In progress','Build & integration', '','','',            'Jun 2026',     'Decision pending on UK Promo Data Transformation.'],
-  ['TPO','FR',  'Carrefour',         'Planned',    'Discovery',           '','','',            'Oct 2026',     'Planned on schedule.'],
-  ['TPO','FR',  'Leclerc',           'Planned',    'Discovery',           '','','',            'Oct 2026',     'Planned on schedule.'],
-  ['TPO','FR',  'Intermarche',       'Planned',    'Discovery',           '','','',            'Oct 2026',     'Planned on schedule.'],
-  ['TPO','BR',  'Droga Raia',        'Pending',    'Discovery',           '','','',            'TBD',          'Date TBD.'],
-  ['TPO','CHI', 'AS Watson',         'In progress','UAT',                 '','','1–5 Jun 2026','Jun 2026',     'P&L methodology approved (8 May); UAT 1–5 Jun; go-live Jun 2026.'],
-
-  // ── PEA — by customer ──────────────────────────────────────
-  ['PEA','CA',  'Shoppers Drug Mart','Live',        'Live',               '','','',            '7 May 2026',   'Live in production.'],
-  ['PEA','DE',  'Rossmann',          'In progress', 'UAT',                '','','',            'May 2026',     'On track.'],
-  ['PEA','DE',  'Edeka',             'In progress', 'UAT',                '','','',            'May 2026',     'On track.'],
-  ['PEA','DE',  'Rewe',              'In progress', 'UAT',                '','','',            'May 2026',     'On track.'],
-  ['PEA','AUS', 'Coles',             'Planned',     'Build & integration','','','',            'Jun 2026',     'Planned on schedule.'],
-  ['PEA','UK',  'Boots',             'Planned',     'Build & integration','','','',            'Jun 2026',     'Planned on schedule.'],
-  ['PEA','UK',  'Asda',              'Planned',     'Build & integration','','','',            'Jun 2026',     'Planned on schedule.'],
-  ['PEA','UK',  'Tesco',             'In progress', 'Build & integration','','','',            'Jun 2026',     'Decision pending on UK Promo Data Transformation.'],
-  ['PEA','FR',  'Carrefour',         'Planned',     'Discovery',          '','','',            'Jul 2026',     'Planned on schedule.'],
-  ['PEA','FR',  'Leclerc',           'Planned',     'Discovery',          '','','',            'Jul 2026',     'Planned on schedule.'],
-  ['PEA','FR',  'Intermarche',       'Planned',     'Discovery',          '','','',            'Jul 2026',     'Planned on schedule.'],
-  ['PEA','BR',  'Droga Raia',        'Pending',     'Discovery',          '','','',            'TBD',          'Date TBD.'],
-  ['PEA','CHI', 'AS Watson',         'In progress', 'UAT',                '','','1–5 Jun 2026','Apr 2026',     'Go-live Jun 2026.'],
-
-  // ── US Customer PnL — milestones ───────────────────────────
-  ['US Customer PnL','NA','Discovery & business requirements','Live',       'Live',       '','','','6 May 2026','37 of 38 KPIs closed.'],
-  ['US Customer PnL','NA','Data modelling',                   'Live',       'Live',       '','','','6 May 2026','Completed.'],
-  ['US Customer PnL','NA','Technical go-live',                'In progress','UAT',        '','','','TBD',        'In progress.'],
-  ['US Customer PnL','NA','Activation',                       'Planned',    'Discovery',  '','','','TBD',        'Phased expansion to next 8 customers.'],
-
-  // ── Pricing ─────────────────────────────────────────────────
-  ['Pricing','BR','Brazil pricing datasets','In progress','Discovery','','','','TBD','Datasets in discussion with Brazil RGM team.'],
-];
-
-// ════════════════════════════════════════════════════════════════
-//  ENGINE — no changes needed below this line
-// ════════════════════════════════════════════════════════════════
-
-const FIELDS   = ['product','market','customer','status','phase','disc','build','uat','golive','notes'];
-const ROWS     = RAW.map(r => Object.fromEntries(FIELDS.map((f,i) => [f, r[i]])));
-const PRODUCTS = [...new Set(ROWS.map(r => r.product))];
-
-const MKT = {
-  NA:'North America', EMEA:'Europe, ME & Africa', APAC:'Asia Pacific',
-  LATAM:'Latin America', CA:'Canada', DE:'Germany', AUS:'Australia',
-  UK:'United Kingdom', FR:'France', BR:'Brazil', CHI:'China'
+const EMBEDDED = {
+'POM':[
+  ['NA',   'Regional rollout','Live',       'Live',               '','','','Mar 2026',   'Live in production.'],
+  ['EMEA', 'Regional rollout','Live',       'Live',               '','','','26 Mar 2026','Live in production.'],
+  ['APAC', 'Regional rollout','Live',       'Live',               '','','','23 Mar 2026','Live in production.'],
+  ['LATAM','Regional rollout','Pending',    'UAT',                '','','','TBD',        'Pending business sign-off; UAT to complete week of 16-Jun.'],
+  ['NA-CA','Regional rollout','Pending',    'Discovery',          '','','','TBD',        'New source data pending (Ana Fuentes).'],
+],
+'TPO':[
+  ['CA', 'Shoppers Drug Mart','Live',        'Live',               '','','','May 2026',  'Live in production.'],
+  ['DE', 'Rossmann',          'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['DE', 'Edeka',             'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['DE', 'Rewe',              'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['AUS','Coles',             'Pending',     'Discovery',          '','','','TBD',       'Scope to be confirmed.'],
+  ['AUS','Woolworths',        'Planned',     'Build & integration','','','','Jul 2026',  'TPO DS Optimized Model under finalization.'],
+  ['UK', 'Boots',             'Planned',     'Build & integration','','','','Sep 2026',  'Planned on schedule.'],
+  ['UK', 'Asda',              'Planned',     'Build & integration','','','','Sep 2026',  'Planned on schedule.'],
+  ['UK', 'Tesco',             'In progress', 'Build & integration','','','','Jun 2026',  'Decision pending on UK Promo Data Transformation.'],
+  ['FR', 'Carrefour',         'Planned',     'Discovery',          '','','','Oct 2026',  'Planned on schedule.'],
+  ['FR', 'Leclerc',           'Planned',     'Discovery',          '','','','Oct 2026',  'Planned on schedule.'],
+  ['FR', 'Intermarche',       'Planned',     'Discovery',          '','','','Oct 2026',  'Planned on schedule.'],
+  ['BR', 'Droga Raia',        'Pending',     'Discovery',          '','','','TBD',       'Date TBD.'],
+  ['CHI','AS Watson',         'In progress', 'UAT',                '','','22-29 Jun 2026','Jul 2026','PEA go-live first week of July; UAT 22-29 Jun.'],
+],
+'PEA':[
+  ['CA', 'Shoppers Drug Mart','Live',        'Live',               '','','','7 May 2026','Live in production.'],
+  ['AUS','Woolworths',        'Live',        'Live',               '','','','May 2026',  'Live in production.'],
+  ['DE', 'Rossmann',          'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['DE', 'Edeka',             'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['DE', 'Rewe',              'Delayed',     'Build & integration','','','','TBD',       'Data engineering delay; target date TBD.'],
+  ['AUS','Coles',             'Planned',     'Build & integration','','','','Jul 2026',  'Planned on schedule.'],
+  ['UK', 'Boots',             'Planned',     'Build & integration','','','','Jun 2026',  'Planned on schedule.'],
+  ['UK', 'Asda',              'Planned',     'Build & integration','','','','Jun 2026',  'Planned on schedule.'],
+  ['UK', 'Tesco',             'In progress', 'Build & integration','','','','Jun 2026',  'Decision pending on UK Promo Data Transformation.'],
+  ['FR', 'Carrefour',         'Planned',     'Discovery',          '','','','Jul 2026',  'Planned on schedule.'],
+  ['FR', 'Leclerc',           'Planned',     'Discovery',          '','','','Jul 2026',  'Planned on schedule.'],
+  ['FR', 'Intermarche',       'Planned',     'Discovery',          '','','','Jul 2026',  'Planned on schedule.'],
+  ['BR', 'Droga Raia',        'Pending',     'Discovery',          '','','','TBD',       'Date TBD.'],
+  ['CHI','AS Watson',         'In progress', 'UAT',                '','','22-29 Jun 2026','Jul 2026','Go-live first week of July (revised); UAT 22-29 Jun.'],
+],
+'US Customer PnL':[
+  ['NA','Discovery & business requirements','Live',       'Live',               '','','','6 May 2026','37 of 38 KPIs closed.'],
+  ['NA','Data modelling',                   'Live',       'Live',               '','','','6 May 2026','Completed.'],
+  ['NA','Tactical build',                   'In progress','Build & integration','','','','Jul 2026',  'In progress.'],
+  ['NA','Technical go-live',                'Planned',    'UAT',                '','','','Sep 2026',  'UAT, automation and deployment.'],
+  ['NA','Activation',                       'Planned',    'Discovery',          '','','','Oct 2026',  'Phased expansion to next 8 customers.'],
+],
+'Pricing':[
+  ['UK','UK pricing',            'In progress','Discovery','','','','TBD','Semantic inclusion underway (Adil / Jason).'],
+  ['BR','Brazil pricing datasets','In progress','Discovery','','','','TBD','Datasets in discussion with local DnA; targeted end-May.'],
+],
 };
+
+// ════════════════════════════════════════════════════════════════════
+//  ENGINE
+// ════════════════════════════════════════════════════════════════════
+const MKT = {NA:'North America',EMEA:'Europe, ME & Africa',APAC:'Asia Pacific',LATAM:'Latin America',
+  'NA-CA':'North America (Canada)',CA:'Canada',DE:'Germany',AUS:'Australia',
+  UK:'United Kingdom',FR:'France',BR:'Brazil',CHI:'China'};
 const ST = {
-  'Live':        { k:'live', dc:'d-live', pill:'pl-live', label:'Live' },
-  'In progress': { k:'prog', dc:'d-prog', pill:'pl-prog', label:'In progress' },
-  'Planned':     { k:'plan', dc:'d-plan', pill:'pl-plan', label:'Planned' },
-  'Pending':     { k:'pend', dc:'d-pend', pill:'pl-pend', label:'Pending' },
+  'Live':        {dc:'d-live',pill:'pl-live',label:'Live'},
+  'In progress': {dc:'d-prog',pill:'pl-prog',label:'In progress'},
+  'Planned':     {dc:'d-plan',pill:'pl-plan',label:'Planned'},
+  'Delayed':     {dc:'d-dela',pill:'pl-dela',label:'Delayed'},
+  'Pending':     {dc:'d-pend',pill:'pl-pend',label:'Pending'},
 };
-const PHASE_IDX    = { 'Discovery':0, 'Build & integration':1, 'UAT':2, 'Go-live':3, 'Live':4 };
-const PHASE_LABELS = ['Discovery', 'Build & integration', 'UAT', 'Go-live'];
+const PHASE_IDX    = {Discovery:0,'Build & integration':1,UAT:2,'Go-live':3,Live:4};
+const PHASE_LABELS = ['Discovery','Build & integration','UAT','Go-live'];
 const NOW_KEY = 202606;
-
-let curView = 'board';
-let curProd = PRODUCTS[0];
 
 function dkey(d) {
   if (!d || d === 'TBD') return 999999;
-  const m = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-  const q = {Q1:3,Q2:6,Q3:9,Q4:12};
-  const p = d.replace(/^[\d\-–]+\s/, '').split(' ');
-  return parseInt(p[1]) * 100 + (m[p[0]] || q[p[0]] || 1);
+  const m={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  const q={Q1:3,Q2:6,Q3:9,Q4:12};
+  const p = d.replace(/^[\d\-–]+\s/,'').split(' ');
+  return parseInt(p[1])*100 + (m[p[0]] || q[p[0]] || 1);
 }
 
-// ── Boot ──────────────────────────────────────────────────────
+function buildRows(raw) {
+  const rows = [];
+  SHEET_NAMES.forEach(prod => {
+    (raw[prod] || []).forEach(r => {
+      if (!r[0] && !r[1]) return;
+      rows.push({
+        product: prod,
+        market:  String(r[0]||''), customer: String(r[1]||''),
+        status:  String(r[2]||'Pending'), phase: String(r[3]||'Discovery'),
+        disc:    String(r[4]||''), build: String(r[5]||''),
+        uat:     String(r[6]||''), golive: String(r[7]||'TBD'),
+        notes:   String(r[8]||''),
+      });
+    });
+  });
+  return rows;
+}
+
+let ROWS = buildRows(EMBEDDED);
+let curView = 'board', curProd = SHEET_NAMES[0];
+
+// ── Boot ─────────────────────────────────────────────────────────────
 document.getElementById('asOf').textContent = LAST_UPDATED;
 buildTabs();
 render();
+fetchFromGitHub();
 
-// ── Tabs ──────────────────────────────────────────────────────
-function buildTabs() {
-  document.getElementById('ptabs').innerHTML =
-    PRODUCTS.map(p =>
-      `<button class="ptab${p === curProd ? ' on' : ''}"
-        onclick="setProd(${JSON.stringify(p)})">${p}</button>`
-    ).join('');
+// ── GitHub fetch ──────────────────────────────────────────────────────
+async function fetchFromGitHub() {
+  setStatus('loading');
+  try {
+    const resp = await fetch(GITHUB_RAW + '?t=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const buffer = await resp.arrayBuffer();
+    const wb = XLSX.read(buffer, {type:'array'});
+    const live = {};
+    SHEET_NAMES.forEach(sheet => {
+      if (!wb.Sheets[sheet]) return;
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], {header:1, defval:''});
+      live[sheet] = rows.slice(1).filter(r => r[0] || r[1]);
+    });
+    ROWS = buildRows(live);
+    setStatus('live');
+    render();
+  } catch(e) {
+    console.error('GitHub fetch failed:', e);
+    setStatus('error');
+  }
 }
 
-function setProd(p) { curProd = p; buildTabs(); render(); }
+// ── Status ────────────────────────────────────────────────────────────
+function setStatus(state) {
+  const el = document.getElementById('conn-status');
+  const rb = document.getElementById('refresh-btn');
+  const map = {
+    loading:  {text:'Fetching latest from GitHub…',    cls:'s-loading'},
+    live:     {text:'Live · GitHub · ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), cls:'s-live'},
+    error:    {text:'GitHub unavailable · Using embedded data', cls:'s-error'},
+    embedded: {text:'Embedded data · ' + LAST_UPDATED, cls:'s-embedded'},
+  };
+  const s = map[state] || map.embedded;
+  el.textContent = s.text;
+  el.className = 'conn-status ' + s.cls;
+  rb.style.display = state === 'live' ? 'inline-block' : 'none';
+}
 
-// ── View toggle ───────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────────────
+function buildTabs() {
+  document.getElementById('ptabs').innerHTML =
+    SHEET_NAMES.map((p,i) =>
+      `<button class="ptab${p===curProd?' on':''}" onclick="setProd(${i})">${p}</button>`
+    ).join('');
+}
+function setProd(i) { curProd = SHEET_NAMES[i]; buildTabs(); render(); }
+
+// ── View ──────────────────────────────────────────────────────────────
 function setView(v) {
   curView = v;
-  document.getElementById('btn-board').classList.toggle('on', v === 'board');
-  document.getElementById('btn-next').classList.toggle('on', v === 'next');
-  document.getElementById('ptabs').style.display = v === 'board' ? '' : 'none';
+  document.getElementById('btn-board').classList.toggle('on', v==='board');
+  document.getElementById('btn-next').classList.toggle('on', v==='next');
+  document.getElementById('ptabs').style.display = v==='board' ? '' : 'none';
   render();
 }
 
-// ── Render dispatcher ─────────────────────────────────────────
 function render() {
-  document.getElementById('main').innerHTML =
-    curView === 'board' ? renderBoard() : renderNext();
+  document.getElementById('main').innerHTML = curView==='board' ? renderBoard() : renderNext();
 }
 
-// ── Board ─────────────────────────────────────────────────────
+// ── Board ─────────────────────────────────────────────────────────────
 function renderBoard() {
   const list = ROWS.filter(r => r.product === curProd);
-  const cnt  = { 'Live':0, 'In progress':0, 'Planned':0, 'Pending':0 };
+  const cnt  = {'Live':0,'In progress':0,'Delayed':0,'Planned':0,'Pending':0};
   list.forEach(r => cnt[r.status]++);
 
-  const metrics = `
-    <div class="metrics">
-      <div class="metric">
-        <div class="m-label"><span class="dot d-live"></span>Live</div>
-        <div class="m-val">${cnt.Live}</div>
-      </div>
-      <div class="metric">
-        <div class="m-label"><span class="dot d-prog"></span>In progress</div>
-        <div class="m-val">${cnt['In progress']}</div>
-      </div>
-      <div class="metric">
-        <div class="m-label"><span class="dot d-plan"></span>Planned</div>
-        <div class="m-val">${cnt.Planned}</div>
-      </div>
-      <div class="metric">
-        <div class="m-label"><span class="dot d-pend"></span>Pending</div>
-        <div class="m-val">${cnt.Pending}</div>
-      </div>
-    </div>`;
+  const metrics = `<div class="metrics">
+    <div class="metric"><div class="m-label"><span class="dot d-live"></span>Live</div><div class="m-val">${cnt.Live}</div></div>
+    <div class="metric"><div class="m-label"><span class="dot d-prog"></span>In progress</div><div class="m-val">${cnt['In progress']}</div></div>
+    <div class="metric"><div class="m-label"><span class="dot d-dela"></span>Delayed</div><div class="m-val">${cnt.Delayed}</div></div>
+    <div class="metric"><div class="m-label"><span class="dot d-plan"></span>Planned</div><div class="m-val">${cnt.Planned}</div></div>
+  </div>`;
 
   const byM = {};
-  list.forEach(r => { (byM[r.market] = byM[r.market] || []).push(r); });
+  list.forEach(r => { (byM[r.market] = byM[r.market]||[]).push(r); });
 
-  let zones = '<div class="zones">';
-  let delay = 0;
+  let zones = '<div class="zones">'; let delay = 0;
   Object.entries(byM).forEach(([mk, items]) => {
     zones += `<div class="zone" style="animation-delay:${delay}ms">
       <div class="zone-head">
-        <div class="zone-left">
-          <span class="zone-code">${mk}</span>
-          ${MKT[mk] ? `<span class="zone-name">${MKT[mk]}</span>` : ''}
-        </div>
-        <span class="zone-count">${items.length} ${items.length > 1 ? 'items' : 'item'}</span>
+        <div class="zone-left"><span class="zone-code">${mk}</span>${MKT[mk]?`<span class="zone-name">${MKT[mk]}</span>`:''}</div>
+        <span class="zone-count">${items.length} ${items.length>1?'items':'item'}</span>
       </div>`;
     items.forEach(r => {
-      const s  = ST[r.status];
-      const gi = ROWS.indexOf(r);
-      zones += `
-      <div class="zone-row" onclick="drill(${gi})">
+      const s = ST[r.status]||ST['Pending']; const gi = ROWS.indexOf(r);
+      zones += `<div class="zone-row" onclick="drill(${gi})">
         <span class="dot ${s.dc}"></span>
         <span class="rname">${r.customer}</span>
-        <span class="rright">
-          <span class="rstat">${s.label}</span>
-          <span class="rdate">${r.golive}</span>
-        </span>
+        <span class="rright"><span class="rstat">${s.label}</span><span class="rdate">${r.golive}</span></span>
       </div>`;
     });
-    zones += '</div>';
-    delay += 55;
+    zones += '</div>'; delay += 55;
   });
   zones += '</div>';
 
-  const legend = `
-    <div class="legend">
-      <span class="li"><span class="dot d-live"></span>Live</span>
-      <span class="li"><span class="dot d-prog"></span>In progress</span>
-      <span class="li"><span class="dot d-plan"></span>Planned</span>
-      <span class="li"><span class="dot d-pend"></span>Pending</span>
-      <span class="li-hint">Click any row for its go-live timeline</span>
-    </div>`;
+  const legend = `<div class="legend">
+    <span class="li"><span class="dot d-live"></span>Live</span>
+    <span class="li"><span class="dot d-prog"></span>In progress</span>
+    <span class="li"><span class="dot d-dela"></span>Delayed</span>
+    <span class="li"><span class="dot d-plan"></span>Planned</span>
+    <span class="li"><span class="dot d-pend"></span>Pending</span>
+    <span class="li-hint">Click any row for its go-live timeline</span>
+  </div>`;
 
   return metrics + zones + legend;
 }
 
-// ── What's next ───────────────────────────────────────────────
+// ── What's next ───────────────────────────────────────────────────────
 function renderNext() {
   const ev = ROWS
     .filter(r => r.status !== 'Live')
-    .map(r => ({ ...r, k: dkey(r.golive), gi: ROWS.indexOf(r) }))
-    .sort((a, b) => a.k - b.k);
+    .map(r => ({...r, k:dkey(r.golive), gi:ROWS.indexOf(r)}))
+    .sort((a,b) => a.k - b.k);
 
-  const groups = {}; const order = [];
+  const groups = {}, order = [];
   ev.forEach(e => {
-    const key = e.golive || 'TBD';
-    if (!groups[key]) { groups[key] = []; order.push(key); }
+    const key = e.golive||'TBD';
+    if (!groups[key]) { groups[key]=[]; order.push(key); }
     groups[key].push(e);
   });
 
   let html = '<div class="next-wrap">';
   order.forEach(when => {
-    const k    = dkey(when);
-    const past = k < NOW_KEY && k !== 999999;
-    const lbl  = when === 'TBD' ? 'Unscheduled (TBD)' : when;
-    html += `<div class="ngroup">
-      <div class="nwhen">${lbl}${past ? ' <span class="npast">· date passed</span>' : ''}<span class="nln"></span></div>`;
+    const k = dkey(when), past = (k<NOW_KEY && k!==999999);
+    const lbl = when==='TBD' ? 'Unscheduled (TBD)' : when;
+    html += `<div class="ngroup"><div class="nwhen">${lbl}${past?' <span class="npast">· date passed</span>':''}<span class="nln"></span></div>`;
     groups[when].forEach(e => {
-      const s = ST[e.status];
-      html += `
-      <div class="nrow" onclick="drill(${e.gi})">
+      const s = ST[e.status]||ST['Pending'];
+      html += `<div class="nrow" onclick="drill(${e.gi})">
         <span class="dot ${s.dc}"></span>
         <span class="nmain">${e.customer} <span class="nmkt">· ${e.market}</span></span>
         <span class="nnote">${s.label}</span>
@@ -660,52 +413,36 @@ function renderNext() {
   return html + '</div>';
 }
 
-// ── Drill-down ────────────────────────────────────────────────
+// ── Drill-down ────────────────────────────────────────────────────────
 function drill(gi) {
-  const r     = ROWS[gi];
-  const s     = ST[r.status];
-  const stage = PHASE_IDX[r.phase] !== undefined ? PHASE_IDX[r.phase] : 0;
+  const r = ROWS[gi]; const s = ST[r.status]||ST['Pending'];
+  const stage = PHASE_IDX[r.phase]!==undefined ? PHASE_IDX[r.phase] : 0;
   const dates = [r.disc, r.build, r.uat, r.golive];
-
   let tl = '';
   PHASE_LABELS.forEach((ph, i) => {
-    const state = i < stage ? 'done' : i === stage ? 'cur' : 'todo';
-    const ncls  = state === 'done' ? 'tn-done' : state === 'cur' ? 'tn-cur' : 'tn-todo';
-    const lcls  = state === 'todo' ? 'tl-label muted' : 'tl-label';
-    const dt    = dates[i] || (state === 'todo' ? '—' : '');
-    const last  = i === PHASE_LABELS.length - 1;
-    tl += `
-    <div class="tl-item">
-      ${last ? '' : '<div class="tl-line"></div>'}
+    const state = i<stage ? 'done' : i===stage ? 'cur' : 'todo';
+    const ncls  = state==='done' ? 'tn-done' : state==='cur' ? 'tn-cur' : 'tn-todo';
+    const lcls  = state==='todo' ? 'tl-label muted' : 'tl-label';
+    const dt    = dates[i]||(state==='todo'?'—':'');
+    const last  = i===PHASE_LABELS.length-1;
+    tl += `<div class="tl-item">${last?'':`<div class="tl-line"></div>`}
       <div class="tl-dot ${ncls}"></div>
-      <div class="tl-body">
-        <span class="${lcls}">${ph}</span>
-        <span class="tl-date">${dt}</span>
-      </div>
+      <div class="tl-body"><span class="${lcls}">${ph}</span><span class="tl-date">${dt}</span></div>
     </div>`;
   });
-
   const mktFull = MKT[r.market] ? ` · ${MKT[r.market]}` : '';
   const note    = r.notes ? `<div class="card-note">${r.notes}</div>` : '';
-
   const ov = document.createElement('div');
   ov.className = 'overlay';
-  ov.onclick = e => { if (e.target === ov) ov.remove(); };
-  ov.innerHTML = `
-    <div class="card">
-      <div class="card-top">
-        <span class="card-name">${r.customer}</span>
-        <button class="xbtn" aria-label="Close"
-          onclick="this.closest('.overlay').remove()">&#x2715;</button>
-      </div>
-      <div class="card-meta">
-        ${r.product} · ${r.market}${mktFull}
-        &nbsp;·&nbsp;
-        <span class="pill ${s.pill}">${s.label}</span>
-      </div>
-      <div class="tl">${tl}</div>
-      ${note}
-    </div>`;
+  ov.onclick = e => { if (e.target===ov) ov.remove(); };
+  ov.innerHTML = `<div class="card">
+    <div class="card-top">
+      <span class="card-name">${r.customer}</span>
+      <button class="xbtn" aria-label="Close" onclick="this.closest('.overlay').remove()">&#x2715;</button>
+    </div>
+    <div class="card-meta">${r.product} · ${r.market}${mktFull} &nbsp;·&nbsp; <span class="pill ${s.pill}">${s.label}</span></div>
+    <div class="tl">${tl}</div>${note}
+  </div>`;
   document.body.appendChild(ov);
 }
 </script>
