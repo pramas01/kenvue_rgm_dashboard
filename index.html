@@ -147,6 +147,7 @@
   <div class="conn-bar">
     <span id="conn-status" class="conn-status s-embedded">Embedded data · Week ending 6/5</span>
     <button id="refresh-btn" class="refresh-btn" onclick="fetchFromGitHub()">&#8635; Refresh</button>
+    <button onclick="window.open('infographic.html','_blank')" style="margin-left:auto;font-size:12px;font-weight:500;padding:6px 14px;border-radius:8px;border:0.5px solid var(--border);background:var(--surface);color:var(--navy);cursor:pointer">&#128202; Generate infographic</button>
   </div>
 
   <nav class="ptabs" id="ptabs"></nav>
@@ -157,7 +158,7 @@
 // ════════════════════════════════════════════════════════════════════
 //  CONFIG — update file name here if you rename the Excel
 // ════════════════════════════════════════════════════════════════════
-const GITHUB_RAW = 'https://raw.githubusercontent.com/pramas01/kenvue_rgm_dashboard/main/rgm_program_update_June.xlsx';
+const GITHUB_RAW = 'https://raw.githubusercontent.com/pramas01/kenvue_rgm_dashboard/main/rgm_program_update_June.xlsm';
 const SHEET_NAMES = ['POM','TPO','PEA','US Customer PnL','Pricing'];
 
 // ════════════════════════════════════════════════════════════════════
