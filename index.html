@@ -48,7 +48,7 @@ a{text-decoration:none}
 .wrap{max-width:1100px;margin:0 auto;padding:28px 28px 64px}
 
 /* ── Product cards ─────────────────────────────────────────────── */
-.prod-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.prod-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
 .prod-card{background:var(--surface);border:1.5px solid var(--border);border-left:4px solid var(--teal);border-radius:var(--r-lg);padding:22px 18px 18px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;gap:6px}
 .prod-card:hover{background:var(--teal-light);border-color:var(--teal);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,176,151,0.12)}
 .prod-card:hover .pc-arrow{color:var(--teal)}
@@ -69,7 +69,7 @@ a{text-decoration:none}
 .ach-bdot.on{background:var(--teal);width:18px;border-radius:3px}
 
 /* ── Dual collapsible ────────────────────────────────────────────── */
-.dual-coll{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.dual-coll{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;align-items:start}
 @media(max-width:640px){.dual-coll{grid-template-columns:1fr}}
 
 /* ── Collapsible tabs ────────────────────────────────────────────── */
@@ -192,7 +192,18 @@ a{text-decoration:none}
 .card-note{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-2);line-height:1.6}
 .card-callout{margin-top:14px;padding:10px 14px;background:var(--teal-light);border:1px solid rgba(0,176,151,.2);border-left:3px solid var(--teal);border-radius:var(--r);font-size:11.5px;color:var(--text);line-height:1.5}
 .callout-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--teal);margin-bottom:5px}
-/* ── Region filter ─────────────────────────────────────────────── */
+/* ── TPx split card ────────────────────────────────────────────── */
+.tpx-col-hdr{display:grid;grid-template-columns:1fr 1fr;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);padding:5px 14px;background:var(--bg);border-bottom:1px solid var(--border-2);gap:0}
+.tpx-col-hdr span{padding:0 2px}
+.tpx-col-hdr span:first-child{border-right:1px solid var(--border-2);padding-right:10px}
+.tpx-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border-2)}
+.tpx-row:last-child{border-bottom:none}
+.tpx-side{display:flex;align-items:center;gap:7px;padding:9px 14px;font-size:12px;color:var(--text);min-height:38px;transition:background .1s}
+.tpx-side:first-child{border-right:1px solid var(--border-2)}
+.tpx-side.clickable{cursor:pointer}
+.tpx-side.clickable:hover{background:#F8FBF9}
+.tpx-na{color:var(--text-3);font-size:11px}
+.tpx-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;flex-shrink:0}
 .region-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
 .rf-btn{font-size:11px;font-weight:600;padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);cursor:pointer;transition:all .12s}
 .rf-btn.on{background:var(--teal);color:var(--white);border-color:var(--teal)}
@@ -221,11 +232,11 @@ a{text-decoration:none}
 <!-- ── Header ────────────────────────────────────────────────────── -->
 <header class="hdr">
   <div class="hdr-left">
-    <span class="hdr-brand">Kenvue RGM</span>
-    <span class="hdr-title">Command Centre</span>
+    <span class="hdr-brand">Kenvue</span>
+    <span class="hdr-title">RGM Program Delivery Dashboard</span>
   </div>
   <div class="hdr-right">
-    <span id="week-lbl" style="font-size:11px;color:rgba(255,255,255,0.35)"></span>
+    <span id="week-lbl" style="font-size:13px;font-weight:600;color:#FFFFFF"></span>
     <span id="conn-badge" class="conn-badge cb-loading">Loading…</span>
     <button id="refresh-btn" class="hdr-btn hdr-btn-ghost" onclick="fetchFromGitHub()" style="display:none">↺ Refresh</button>
     <button class="hdr-btn hdr-btn-teal" onclick="window.open('infographic.html','_blank')">&#128202; Infographic</button>
@@ -306,6 +317,9 @@ const REGION_MAP={
   'APAC': ['APAC','AUS','CHI'],
   'LATAM':['LATAM','BR'],
 };
+// Navigation — TPx combines PEA + TPO into one tab
+const NAV_ITEMS=['POM','TPx','US Customer PnL','Pricing'];
+const NAV_DESCS={'POM':'Portfolio Optimization','TPx':'Trade Promo Excellence','US Customer PnL':'Customer Profitability','Pricing':'Price Analytics'};
 
 // ════════════════════════════════════════════════════════════════════
 //  STATE
@@ -355,8 +369,20 @@ function dkey(d){
 }
 const ST={'Live':{dc:'d-live',pill:'pl-live',label:'Live'},'In progress':{dc:'d-prog',pill:'pl-prog',label:'In progress'},'Planned':{dc:'d-plan',pill:'pl-plan',label:'Planned'},'Delayed':{dc:'d-dela',pill:'pl-dela',label:'Delayed'},'Pending':{dc:'d-pend',pill:'pl-pend',label:'Pending'}};
 const MKT={NA:'North America',EMEA:'Europe, ME & Africa',APAC:'Asia Pacific',LATAM:'Latin America','NA-CA':'Canada',CA:'Canada',DE:'Germany',AUS:'Australia',UK:'United Kingdom',FR:'France',BR:'Brazil',CHI:'China'};
-const PHASE_IDX={Discovery:0,'Build & integration':1,UAT:2,'Go-live':3,Live:4};
-const PHASE_LABELS=['Discovery','Build & integration','UAT','Go-live'];
+const PHASE_LABELS_MAP={
+  'POM':           ['Discovery','Build','UAT','Live'],
+  'PEA':           ['Data Availability','Build','UAT','Live'],
+  'TPO':           ['Optimization recommendation','Scenario Building','UI Build','UAT','Live'],
+  'US Customer PnL':['Discovery','Build & integration','UAT','Go-live'],
+  'Pricing':       ['Discovery','Build & integration','UAT','Go-live'],
+};
+const PHASE_IDX_MAP={
+  'POM':           {Discovery:0,Build:1,UAT:2,Live:3},
+  'PEA':           {'Data Availability':0,Build:1,UAT:2,Live:3},
+  'TPO':           {'Optimization recommendation':0,'Scenario Building':1,'UI Build':2,UAT:3,Live:4},
+  'US Customer PnL':{Discovery:0,'Build & integration':1,UAT:2,'Go-live':3,Live:4},
+  'Pricing':       {Discovery:0,'Build & integration':1,UAT:2,'Go-live':3,Live:4},
+};
 
 function badgeStyle(prod){
   const m={'POM':'background:#DBEAFE;color:#1E40AF','PEA & TPO':'background:#D1FAE5;color:#065F46','US Customer PnL':'background:#EDE9FE;color:#5B21B6','Pricing':'background:#FEF3C7;color:#92400E'};
@@ -376,17 +402,10 @@ function renderLanding(){
 }
 
 function renderProductCards(){
-  const DESCS={
-    'POM':'Portfolio Optimization',
-    'TPO':'Trade Promotion Optimization',
-    'PEA':'Post Event Analytics',
-    'US Customer PnL':'Customer Profitability',
-    'Pricing':'Price Analytics',
-  };
-  return `<div class="prod-cards">${SHEET_NAMES.map((prod,i)=>`
+  return `<div class="prod-cards">${NAV_ITEMS.map((nav,i)=>`
     <div class="prod-card" onclick="showProduct(${i})">
-      <div class="pc-name">${prod}</div>
-      <div class="pc-desc">${DESCS[prod]||''}</div>
+      <div class="pc-name">${nav}</div>
+      <div class="pc-desc">${NAV_DESCS[nav]||''}</div>
       <div class="pc-arrow">View &rarr;</div>
     </div>`).join('')}</div>`;
 }
@@ -468,29 +487,37 @@ function goSlide(i){
   if(_achTimer){clearInterval(_achTimer);_achTimer=setInterval(()=>{_achIdx=(_achIdx+1)%all.length;_showSlide(all,_achIdx);},4000);}
 }
 
-// ── Landing timeline (adapted to 1044px content) ──────────────────
+// ── Landing timeline ──────────────────────────────────────────────
 function renderLandingTimeline(){
-  const S={SVG_W:1000,SVG_H:290,PL:135,PW:830,DR:6};
-  S.TBD=S.PL+S.PW-10;
-  const TL_START=new Date(2026,2,1),TL_END=new Date(2026,10,15),TL_MS=TL_END-TL_START;
-  function gx(str,d){const dt=d||parseDate(str);if(!dt)return S.TBD;return S.PL+Math.max(0,Math.min(1,(dt-TL_START)/TL_MS))*S.PW;}
+  // Tighter left margin, wider plot, scale to Dec 31
+  const S={SVG_W:1000,SVG_H:300,PL:90,PW:880,DR:6};
+  S.DATE_W=S.PW-60;            // date-scale width (Mar–Dec)
+  S.TBD=S.PL+S.DATE_W+38;      // TBD zone centre — inside the plot, right of Dec
+  const TL_START=new Date(2026,2,1),TL_END=new Date(2026,11,31),TL_MS=TL_END-TL_START;
+  function gx(str,d){const dt=d||parseDate(str);if(!dt)return S.TBD;return S.PL+Math.max(0,Math.min(1,(dt-TL_START)/TL_MS))*S.DATE_W;}
   function dot(x,y,st,r){
-    const F={'Live':'#166534','In progress':'#1D4ED8','Delayed':'#B91C1C','Planned':'white','Pending':'white'};
-    const K={'Planned':'#9CA3AF','Pending':'#D1D5DB'};
-    const fill=F[st]||'white',sk=K[st]||'none';
+    const F={'Live':'#166534','In progress':'#1D4ED8','Delayed':'#B91C1C','Planned':'#D1D5DB','Pending':'#D1D5DB'};
+    const fill=F[st]||'#D1D5DB';
     const cx=+x.toFixed(1);
-    let s=`<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}"${sk!=='none'?` stroke="${sk}" stroke-width="1.5"`:''}/>`;
+    let s=`<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}"/>`;
     if(st==='Live'){const z=r*.5;s+=`<polyline points="${(cx-z).toFixed(1)},${y} ${(cx-z*.15).toFixed(1)},${(y+z*.72).toFixed(1)} ${(cx+z).toFixed(1)},${(y-z*.7).toFixed(1)}" stroke="white" stroke-width="${(r*.28).toFixed(1)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;}
     else if(st==='In progress'){const z=r*.46;s+=`<polygon points="${(cx-z*.5).toFixed(1)},${(y-z).toFixed(1)} ${(cx+z).toFixed(1)},${y} ${(cx-z*.5).toFixed(1)},${(y+z).toFixed(1)}" fill="white"/>`;}
     return s;
   }
-  // lbl: mid anchor for event/month labels, end anchor for row labels
   function lbl(x,y,t,sz,c,anchor='middle'){return `<text x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" text-anchor="${anchor}" font-family="Manrope,sans-serif" font-size="${sz}" fill="${c}">${esc(t)}</text>`;}
-  function spread(dots,gap=16){
-    if(dots.length<=1)return dots;
+  function spread(dots,gap=18){
+    const XMAX=S.PL+S.PW-12; // hard right boundary inside plot
+    if(dots.length<=1)return dots.map(d=>({...d,x:Math.min(d.x,XMAX)}));
     const s=[...dots].sort((a,b)=>a.x-b.x),out=[];let i=0;
     while(i<s.length){const cl=[s[i]];let j=i+1;while(j<s.length&&s[j].x-cl[0].x<gap){cl.push(s[j]);j++;}
-      if(cl.length===1){out.push(cl[0]);}else{const cx=cl.reduce((a,d)=>a+d.x,0)/cl.length,tw=(cl.length-1)*gap;cl.forEach((d,k)=>out.push({...d,x:Math.min(cx-tw/2+k*gap,S.TBD+8)}));}
+      if(cl.length===1){out.push({...cl[0],x:Math.min(cl[0].x,XMAX)});}
+      else{
+        let cx=cl.reduce((a,d)=>a+d.x,0)/cl.length;
+        const tw=(cl.length-1)*gap;
+        // shift cluster left if it would overflow right boundary
+        if(cx+tw/2>XMAX) cx=XMAX-tw/2;
+        cl.forEach((d,k)=>out.push({...d,x:cx-tw/2+k*gap}));
+      }
       i=j;}
     return out;
   }
@@ -501,57 +528,59 @@ function renderLandingTimeline(){
     return Object.values(G).map(g=>({x:gx(g.golive),lbl:g.market,status:['Delayed','In progress','Pending','Planned','Live'].find(s=>g.sts.includes(s))||'Planned'}));
   }
 
-  const RC=[{lbl:'POM',sub:'5 regions',cy:62},{lbl:'PEA & TPO',sub:'14 customers',cy:130},{lbl:'US Cust. PnL',sub:'6 milestones',cy:195},{lbl:'Pricing',sub:'3 markets',cy:240}];
-  const pea_cy=115,tpo_cy=145;
-  // viewBox + width:100% = responsive, never overflows container
-  let svg=`<svg viewBox="0 0 ${S.SVG_W} ${S.SVG_H}" style="overflow:visible;display:block;width:100%" xmlns="http://www.w3.org/2000/svg">`;
+  const RC=[{lbl:'POM',sub:'5 regions',cy:62},{lbl:'PEA & TPO',sub:'14 customers',cy:130},{lbl:'US Cust. PnL',sub:'6 milestones',cy:200},{lbl:'Pricing',sub:'3 markets',cy:248}];
+  const pea_cy=115,tpo_cy=148;
+  let svg=`<svg viewBox="0 0 ${S.SVG_W} ${S.SVG_H}" style="display:block;width:100%" xmlns="http://www.w3.org/2000/svg">`;
 
   // Bands
-  [[38,88,'#FAFBFC'],[96,166,'#fff'],[172,218,'#FAFBFC'],[218,258,'#fff']].forEach(([y1,y2,c])=>svg+=`<rect x="${S.PL}" y="${y1}" width="${S.PW}" height="${y2-y1}" fill="${c}"/>`);
-  svg+=`<rect x="${S.PL}" y="26" width="${S.PW}" height="${S.SVG_H-56}" fill="none" stroke="#E2E5EB" stroke-width="0.5"/>`;
-  [90,168,220].forEach(y=>svg+=`<line x1="${S.PL}" y1="${y}" x2="${S.PL+S.PW}" y2="${y}" stroke="#D4D8DF" stroke-width="1"/>`);
+  [[38,92,'#FAFBFC'],[92,170,'#fff'],[170,226,'#FAFBFC'],[226,268,'#fff']].forEach(([y1,y2,c])=>svg+=`<rect x="${S.PL}" y="${y1}" width="${S.PW}" height="${y2-y1}" fill="${c}"/>`);
+  svg+=`<rect x="${S.PL}" y="26" width="${S.PW}" height="242" fill="none" stroke="#E2E5EB" stroke-width="0.5"/>`;
+  [92,170,226].forEach(y=>svg+=`<line x1="${S.PL}" y1="${y}" x2="${S.PL+S.PW}" y2="${y}" stroke="#D4D8DF" stroke-width="1"/>`);
 
-  // Month labels + gridlines
-  [{l:'Mar',d:new Date(2026,2,1)},{l:'Apr',d:new Date(2026,3,1)},{l:'May',d:new Date(2026,4,1)},{l:'Jun',d:new Date(2026,5,1)},{l:'Jul',d:new Date(2026,6,1)},{l:'Aug',d:new Date(2026,7,1)},{l:'Sep',d:new Date(2026,8,1)},{l:'Oct',d:new Date(2026,9,1)},{l:'Nov',d:new Date(2026,10,1)}]
-  .forEach(({l,d})=>{const x=gx(null,d);svg+=`<line x1="${x.toFixed(1)}" y1="26" x2="${x.toFixed(1)}" y2="${S.SVG_H-56}" stroke="#EAECF0" stroke-width="1"/>`;svg+=lbl(x,18,l,9,'#9EA3A9');});
+  // Month labels + gridlines — Mar through Dec
+  [{l:'Mar',d:new Date(2026,2,1)},{l:'Apr',d:new Date(2026,3,1)},{l:'May',d:new Date(2026,4,1)},{l:'Jun',d:new Date(2026,5,1)},{l:'Jul',d:new Date(2026,6,1)},{l:'Aug',d:new Date(2026,7,1)},{l:'Sep',d:new Date(2026,8,1)},{l:'Oct',d:new Date(2026,9,1)},{l:'Nov',d:new Date(2026,10,1)},{l:'Dec',d:new Date(2026,11,1)}]
+  .forEach(({l,d})=>{const x=gx(null,d);svg+=`<line x1="${x.toFixed(1)}" y1="26" x2="${x.toFixed(1)}" y2="268" stroke="#EAECF0" stroke-width="1"/>`;svg+=lbl(x,18,l,9,'#9EA3A9');});
 
-  // TBD zone
-  svg+=`<line x1="${S.TBD}" y1="26" x2="${S.TBD}" y2="${S.SVG_H-56}" stroke="#D4D8DF" stroke-width="1" stroke-dasharray="3,3"/>`;
-  svg+=lbl(S.TBD+16,18,'TBD',8,'#C8CBD0');
+  // TBD zone — separator after Dec, inside the plot
+  const tbdSep=S.PL+S.DATE_W+8;
+  svg+=`<line x1="${tbdSep}" y1="26" x2="${tbdSep}" y2="268" stroke="#D4D8DF" stroke-width="1" stroke-dasharray="3,3"/>`;
+  svg+=lbl(S.TBD,18,'TBD',8,'#C8CBD0');
 
   // Today
   const todayX=gx(null,new Date());
-  if(todayX>S.PL&&todayX<S.TBD){svg+=`<line x1="${todayX.toFixed(1)}" y1="22" x2="${todayX.toFixed(1)}" y2="${S.SVG_H-56}" stroke="#9EA3A9" stroke-width="1.5" stroke-dasharray="4,3"/>`;svg+=lbl(todayX,14,'Today',8,'#9EA3A9');}
+  if(todayX>S.PL&&todayX<S.PL+S.PW){svg+=`<line x1="${todayX.toFixed(1)}" y1="22" x2="${todayX.toFixed(1)}" y2="268" stroke="#9EA3A9" stroke-width="1.5" stroke-dasharray="4,3"/>`;svg+=lbl(todayX,14,'Today',8,'#9EA3A9');}
 
-  // Row labels — all text-anchor:end so they stay LEFT of PLOT_LEFT
+  // Row labels — tight against left edge
   RC.forEach(r=>{
-    svg+=lbl(S.PL-8,r.cy-3,r.lbl,11,'#0A0B0D','end');
-    svg+=lbl(S.PL-8,r.cy+11,r.sub,8,'#9EA3A9','end');
+    svg+=lbl(S.PL-6,r.cy-3,r.lbl,10,'#0A0B0D','end');
+    svg+=lbl(S.PL-6,r.cy+10,r.sub,7.5,'#9EA3A9','end');
   });
-  svg+=lbl(S.PL-8,pea_cy+4,'PEA',7,'#9EA3A9','end');
-  svg+=lbl(S.PL-8,tpo_cy+4,'TPO',7,'#9EA3A9','end');
+  svg+=lbl(S.PL-6,pea_cy+4,'PEA',7,'#9EA3A9','end');
+  svg+=lbl(S.PL-6,tpo_cy+4,'TPO',7,'#9EA3A9','end');
 
-  // POM
-  let pomDots=spread(ROWS.filter(r=>r.product==='POM').map(r=>({x:gx(r.golive),y:RC[0].cy,status:r.status,lbl:r.market})),16);
-  pomDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-([6,16,10][i%3]),d.lbl,8,'#5C6370');});
+  // ── POM — labels above, staggered ──
+  let pomDots=spread(ROWS.filter(r=>r.product==='POM').map(r=>({x:gx(r.golive),y:RC[0].cy,status:r.status,lbl:r.market})),18);
+  pomDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-([5,14,9][i%3]),d.lbl,7.5,'#5C6370');});
 
-  // PEA & TPO
-  let peaDots=spread(grpMktMo(ROWS.filter(r=>r.product==='PEA')).map(g=>({...g,y:pea_cy})),14);
-  let tpoDots=spread(grpMktMo(ROWS.filter(r=>r.product==='TPO')).map(g=>({...g,y:tpo_cy})),14);
-  peaDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR-1);svg+=lbl(d.x,d.y-(S.DR-1)-([7,15,23][i%3]),d.lbl,7.5,'#5C6370');});
-  tpoDots.forEach(d=>svg+=dot(d.x,d.y,d.status,S.DR-1));
+  // ── PEA — labels above, staggered ──
+  let peaDots=spread(grpMktMo(ROWS.filter(r=>r.product==='PEA')).map(g=>({...g,y:pea_cy})),18);
+  peaDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR-1);svg+=lbl(d.x,d.y-(S.DR-1)-([5,13,21][i%3]),d.lbl,7,'#5C6370');});
 
-  // US PnL
-  const PNL_S={'Discovery & business requirements':'Discovery','Data modelling':'Data model','Tactical build':'Tactical build','Technical go-live':'Tech go-live','Activation':'Activation'};
-  let pnlDots=spread(ROWS.filter(r=>r.product==='US Customer PnL').map(r=>({x:gx(r.golive),y:RC[2].cy,status:r.status,lbl:PNL_S[r.customer]||r.customer})),18);
-  pnlDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-([7,15][i%2]),d.lbl,7.5,'#5C6370');});
+  // ── TPO — labels BELOW dots so they don't clash with PEA ──
+  let tpoDots=spread(grpMktMo(ROWS.filter(r=>r.product==='TPO')).map(g=>({...g,y:tpo_cy})),18);
+  tpoDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR-1);svg+=lbl(d.x,d.y+(S.DR-1)+([10,18][i%2]),d.lbl,7,'#5C6370');});
 
-  // Pricing
-  let pDots=spread(ROWS.filter(r=>r.product==='Pricing').map(r=>({x:gx(r.golive),y:RC[3].cy,status:r.status,lbl:r.market})),18);
-  pDots.forEach(d=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-7,d.lbl,8,'#5C6370');});
+  // ── US PnL — labels above, staggered ──
+  const PNL_S={'Discovery & business requirements':'Discovery','Data modelling':'Data model','Tactical build':'Tactical','Technical go-live':'Tech go-live','Activation':'Activation'};
+  let pnlDots=spread(ROWS.filter(r=>r.product==='US Customer PnL').map(r=>({x:gx(r.golive),y:RC[2].cy,status:r.status,lbl:PNL_S[r.customer]||r.customer})),20);
+  pnlDots.forEach((d,i)=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-([5,14][i%2]),d.lbl,7,'#5C6370');});
 
-  // Legend — positioned well below plot, within SVG_H
-  const LY=S.SVG_H-16;
+  // ── Pricing — labels above ──
+  let pDots=spread(ROWS.filter(r=>r.product==='Pricing').map(r=>({x:gx(r.golive),y:RC[3].cy,status:r.status,lbl:r.market})),20);
+  pDots.forEach(d=>{svg+=dot(d.x,d.y,d.status,S.DR);svg+=lbl(d.x,d.y-S.DR-5,d.lbl,7.5,'#5C6370');});
+
+  // ── Legend ──
+  const LY=S.SVG_H-14;
   [{l:'Live',st:'Live'},{l:'On Track',st:'In progress'},{l:'Delayed',st:'Delayed'},{l:'Planned / TBD',st:'Planned'}]
   .forEach(({l,st},i)=>{const lx=S.PL+i*120;svg+=dot(lx+4,LY,st,5);svg+=lbl(lx+14,LY+4,l,8.5,'#9EA3A9','start');});
 
@@ -585,21 +614,37 @@ function showLanding(){
 }
 
 function renderProductView(){
-  const prod=SHEET_NAMES[curProd];
-  const allList=ROWS.filter(r=>r.product===prod);
-  const cnt={'Live':0,'In progress':0,'Delayed':0,'Planned':0,'Pending':0};
-  allList.forEach(r=>cnt[r.status]++);
+  const nav=NAV_ITEMS[curProd];
+  const isTpx=(nav==='TPx');
 
-  // Apply region filter
+  // Data lists
+  const peaList=ROWS.filter(r=>r.product==='PEA');
+  const tpoList=ROWS.filter(r=>r.product==='TPO');
+  const allList=isTpx?[...peaList,...tpoList]:ROWS.filter(r=>r.product===nav);
   const rMkts=curRegion?REGION_MAP[curRegion]:null;
   const list=rMkts?allList.filter(r=>rMkts.includes(r.market)):allList;
 
-  const metrics=`<div class="metrics">
-    <div class="metric"><div class="m-lbl"><span class="dot d-live"></span>Live</div><div class="m-val">${cnt.Live}</div></div>
-    <div class="metric"><div class="m-lbl"><span class="dot d-prog"></span>In progress</div><div class="m-val">${cnt['In progress']}</div></div>
-    <div class="metric"><div class="m-lbl"><span class="dot d-dela"></span>Delayed</div><div class="m-val">${cnt.Delayed}</div></div>
-    <div class="metric"><div class="m-lbl"><span class="dot d-plan"></span>Planned</div><div class="m-val">${cnt.Planned}</div></div>
-  </div>`;
+  // Metrics
+  let metrics;
+  if(isTpx){
+    const pL=rMkts?peaList.filter(r=>rMkts.includes(r.market)):peaList;
+    const tL=rMkts?tpoList.filter(r=>rMkts.includes(r.market)):tpoList;
+    metrics=`<div class="metrics" style="grid-template-columns:repeat(4,1fr)">
+      <div class="metric"><div class="m-lbl"><span class="dot d-live"></span>PEA Live</div><div class="m-val">${pL.filter(r=>r.status==='Live').length}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-live"></span>TPO Live</div><div class="m-val">${tL.filter(r=>r.status==='Live').length}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-prog"></span>In Progress</div><div class="m-val">${list.filter(r=>r.status==='In progress').length}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-dela"></span>Delayed</div><div class="m-val">${list.filter(r=>r.status==='Delayed').length}</div></div>
+    </div>`;
+  } else {
+    const cnt={'Live':0,'In progress':0,'Delayed':0,'Planned':0,'Pending':0};
+    allList.forEach(r=>cnt[r.status]++);
+    metrics=`<div class="metrics">
+      <div class="metric"><div class="m-lbl"><span class="dot d-live"></span>Live</div><div class="m-val">${cnt.Live}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-prog"></span>In progress</div><div class="m-val">${cnt['In progress']}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-dela"></span>Delayed</div><div class="m-val">${cnt.Delayed}</div></div>
+      <div class="metric"><div class="m-lbl"><span class="dot d-plan"></span>Planned</div><div class="m-val">${cnt.Planned}</div></div>
+    </div>`;
+  }
 
   const rfBar=`<div class="region-filter">
     <button class="rf-btn${!curRegion?' on':''}" onclick="setRegion(null)">All</button>
@@ -611,25 +656,57 @@ function renderProductView(){
 
   let content='';
   if(curView==='board'){
-    const byM={};list.forEach(r=>{(byM[r.market]=byM[r.market]||[]).push(r);});
-    if(Object.keys(byM).length===0){
-      content=`<div style="text-align:center;padding:48px 0;color:var(--text-3);font-size:13px">No deliveries in the ${curRegion} region for ${prod}</div>`;
-    } else {
-      let zones='<div class="zones">'; let delay=0;
-      Object.entries(byM).forEach(([mk,items])=>{
-        zones+=`<div class="zone" style="animation-delay:${delay}ms"><div class="zone-head"><span><span class="zone-code">${mk}</span>${MKT[mk]?`<span class="zone-name">${MKT[mk]}</span>`:''}</span><span class="zone-count">${items.length} ${items.length>1?'items':'item'}</span></div>`;
-        items.forEach(r=>{
-          const s=ST[r.status]||ST['Pending'],gi=ROWS.indexOf(r);
-          zones+=`<div class="zone-row" onclick="drill(${gi})">
-            ${logoEl(r.customer)}
-            <span class="rname">${esc(r.customer)}</span>
-            <span class="rright"><span class="dot ${s.dc}"></span><span class="rstat">${s.label}</span><span class="rdate">${esc(r.golive)}</span></span>
-          </div>`;
+    if(isTpx){
+      // Build market → {pea:{cust→row}, tpo:{cust→row}}
+      const byMkt={};
+      const addRow=(r,prog)=>{
+        if(rMkts&&!rMkts.includes(r.market)) return;
+        if(!byMkt[r.market]) byMkt[r.market]={pea:{},tpo:{}};
+        byMkt[r.market][prog][r.customer]=r;
+      };
+      peaList.forEach(r=>addRow(r,'pea'));
+      tpoList.forEach(r=>addRow(r,'tpo'));
+
+      if(Object.keys(byMkt).length===0){
+        content=`<div style="text-align:center;padding:48px 0;color:var(--text-3);font-size:13px">No deliveries in the ${curRegion} region for TPx</div>`;
+      } else {
+        let zones='<div class="zones">'; let delay=0;
+        Object.entries(byMkt).forEach(([mk,data])=>{
+          const custs=[...new Set([...Object.keys(data.pea),...Object.keys(data.tpo)])];
+          zones+=`<div class="zone" style="animation-delay:${delay}ms">
+            <div class="zone-head"><span><span class="zone-code">${mk}</span>${MKT[mk]?`<span class="zone-name">${MKT[mk]}</span>`:''}</span><span class="zone-count">${custs.length} retailers</span></div>
+            <div class="tpx-col-hdr"><span>PEA — Post Event Analytics</span><span>TPO — Trade Promo Optimisation</span></div>`;
+          custs.forEach(cust=>{
+            const pR=data.pea[cust], tR=data.tpo[cust];
+            const pgi=pR?ROWS.indexOf(pR):-1, tgi=tR?ROWS.indexOf(tR):-1;
+            const pS=pR?(ST[pR.status]||ST['Pending']):null;
+            const tS=tR?(ST[tR.status]||ST['Pending']):null;
+            zones+=`<div class="tpx-row">
+              <div class="tpx-side${pR?' clickable':''}" ${pR?`onclick="drill(${pgi})"`:''}>${logoEl(cust)}<span class="rname">${esc(cust)}</span>${pR?`<span class="rright"><span class="dot ${pS.dc}"></span><span class="rstat">${pS.label}</span><span class="rdate">${esc(pR.golive)}</span></span>`:'<span class="tpx-na">—</span>'}</div>
+              <div class="tpx-side${tR?' clickable':''}" ${tR?`onclick="drill(${tgi})"`:''}>${tR?`<span class="rright"><span class="dot ${tS.dc}"></span><span class="rstat">${tS.label}</span><span class="rdate">${esc(tR.golive)}</span></span>`:'<span class="tpx-na">—</span>'}</div>
+            </div>`;
+          });
+          zones+='</div>'; delay+=55;
         });
-        zones+='</div>'; delay+=55;
-      });
-      zones+='</div>';
-      content=zones+`<div class="legend"><span class="li"><span class="dot d-live"></span>Live</span><span class="li"><span class="dot d-prog"></span>In progress</span><span class="li"><span class="dot d-dela"></span>Delayed</span><span class="li"><span class="dot d-plan"></span>Planned</span><span class="li"><span class="dot d-pend"></span>Pending</span><span class="li-hint">Click any row for its go-live timeline</span></div>`;
+        zones+='</div>';
+        content=zones+`<div class="legend"><span class="li"><span class="dot d-live"></span>Live</span><span class="li"><span class="dot d-prog"></span>In progress</span><span class="li"><span class="dot d-dela"></span>Delayed</span><span class="li"><span class="dot d-plan"></span>Planned</span><span class="li"><span class="dot d-pend"></span>Pending</span><span class="li-hint">Click either side to see phase timeline</span></div>`;
+      }
+    } else {
+      const byM={};list.forEach(r=>{(byM[r.market]=byM[r.market]||[]).push(r);});
+      if(Object.keys(byM).length===0){
+        content=`<div style="text-align:center;padding:48px 0;color:var(--text-3);font-size:13px">No deliveries in the ${curRegion} region for ${nav}</div>`;
+      } else {
+        let zones='<div class="zones">'; let delay=0;
+        Object.entries(byM).forEach(([mk,items])=>{
+          zones+=`<div class="zone" style="animation-delay:${delay}ms"><div class="zone-head"><span><span class="zone-code">${mk}</span>${MKT[mk]?`<span class="zone-name">${MKT[mk]}</span>`:''}</span><span class="zone-count">${items.length} ${items.length>1?'items':'item'}</span></div>`;
+          items.forEach(r=>{const s=ST[r.status]||ST['Pending'],gi=ROWS.indexOf(r);
+            zones+=`<div class="zone-row" onclick="drill(${gi})">${logoEl(r.customer)}<span class="rname">${esc(r.customer)}</span><span class="rright"><span class="dot ${s.dc}"></span><span class="rstat">${s.label}</span><span class="rdate">${esc(r.golive)}</span></span></div>`;
+          });
+          zones+='</div>'; delay+=55;
+        });
+        zones+='</div>';
+        content=zones+`<div class="legend"><span class="li"><span class="dot d-live"></span>Live</span><span class="li"><span class="dot d-prog"></span>In progress</span><span class="li"><span class="dot d-dela"></span>Delayed</span><span class="li"><span class="dot d-plan"></span>Planned</span><span class="li"><span class="dot d-pend"></span>Pending</span><span class="li-hint">Click any row for its go-live timeline</span></div>`;
+      }
     }
   } else {
     const ev=list.filter(r=>r.status!=='Live').map(r=>({...r,k:dkey(r.golive),gi:ROWS.indexOf(r)})).sort((a,b)=>a.k-b.k);
@@ -637,20 +714,19 @@ function renderProductView(){
     ev.forEach(e=>{const key=e.golive||'TBD';if(!groups[key]){groups[key]=[];order.push(key);}groups[key].push(e);});
     const NOW=202606;
     let html='<div class="next-wrap">';
-    if(ev.length===0){html+=`<div style="text-align:center;padding:40px 0;color:var(--text-3)">All items in this region are Live</div>`;}
+    if(ev.length===0) html+=`<div style="text-align:center;padding:40px 0;color:var(--text-3)">All items are Live</div>`;
     order.forEach(when=>{
       const k=dkey(when),past=(k<NOW&&k!==999999),lbl=when==='TBD'?'Unscheduled (TBD)':when;
       html+=`<div class="ngroup"><div class="nwhen">${lbl}${past?' <span class="npast">· date passed</span>':''}<span class="nln"></span></div>`;
-      groups[when].forEach(e=>{
-        const s=ST[e.status]||ST['Pending'];
-        html+=`<div class="nrow" onclick="drill(${e.gi})"><span class="dot ${s.dc}"></span><span class="nmain">${esc(e.customer)} <span class="nmkt">· ${e.market}</span></span><span class="nnote">${s.label}</span><span class="nprod">${e.product}</span></div>`;
+      groups[when].forEach(e=>{const s=ST[e.status]||ST['Pending'];
+        html+=`<div class="nrow" onclick="drill(${e.gi})"><span class="dot ${s.dc}"></span><span class="nmain">${esc(e.customer)} <span class="nmkt">· ${e.market}</span></span><span class="nnote">${s.label}</span><span class="nprod">${isTpx?e.product:nav}</span></div>`;
       });
       html+='</div>';
     });
     content=html+'</div>';
   }
 
-  const switcher=`<div class="prod-switcher">${SHEET_NAMES.map((p,i)=>`<button class="ps-tab${i===curProd?' on':''}" onclick="showProduct(${i})">${p.replace('US Customer PnL','US PnL')}</button>`).join('')}</div>`;
+  const switcher=`<div class="prod-switcher">${NAV_ITEMS.map((p,i)=>`<button class="ps-tab${i===curProd?' on':''}" onclick="showProduct(${i})">${p.replace('US Customer PnL','US PnL')}</button>`).join('')}</div>`;
 
   document.getElementById('product-main').innerHTML=`
     <div class="pv-hdr">
@@ -663,7 +739,7 @@ function renderProductView(){
         </div>
       </div>
     </div>
-    <div class="pv-name" style="margin-bottom:16px">${prod}</div>
+    <div class="pv-name" style="margin-bottom:16px">${nav}${isTpx?` <span style="font-size:13px;font-weight:400;color:var(--text-3);font-family:Manrope,sans-serif">Trade Promo Excellence</span>`:''}</div>
     ${metrics}
     ${rfBar}
     ${content}`;
@@ -677,18 +753,19 @@ function setRegion(r){curRegion=(curRegion===r?null:r);renderProductView();}
 // ════════════════════════════════════════════════════════════════════
 function drill(gi){
   const r=ROWS[gi],s=ST[r.status]||ST['Pending'];
-  const stage=PHASE_IDX[r.phase]!==undefined?PHASE_IDX[r.phase]:0;
-  const dates=[r.disc,r.build,r.uat,r.golive];
-  // Map status to dot class for the current phase
+  const phaseLabels=PHASE_LABELS_MAP[r.product]||PHASE_LABELS_MAP['US Customer PnL'];
+  const phaseIdx=PHASE_IDX_MAP[r.product]||PHASE_IDX_MAP['US Customer PnL'];
+  const stage=phaseIdx[r.phase]!==undefined?phaseIdx[r.phase]:0;
+  const dates=phaseLabels.map((_,i)=>[r.disc,r.build,r.uat,r.golive,r.golive][i]||'');
   const STATUS_DOT={'Live':'tn-done','In progress':'tn-cur','Delayed':'tn-dela','Planned':'tn-todo','Pending':'tn-todo'};
   let tl='';
-  PHASE_LABELS.forEach((ph,i)=>{
+  phaseLabels.forEach((ph,i)=>{
     const state=i<stage?'done':i===stage?'cur':'todo';
     const ncls=state==='done'?'tn-done':state==='cur'?(STATUS_DOT[r.status]||'tn-cur'):'tn-todo';
     const isDelayedCur=state==='cur'&&r.status==='Delayed';
     const lcls=state==='todo'?'tl-label muted':isDelayedCur?'tl-label tl-delayed':'tl-label';
     const dt=dates[i]||(state==='todo'?'—':'');
-    const last=i===PHASE_LABELS.length-1;
+    const last=i===phaseLabels.length-1;
     tl+=`<div class="tl-item">${last?'':`<div class="tl-line"></div>`}<div class="tl-dot ${ncls}"></div><div class="tl-body"><span class="${lcls}">${ph}</span><span class="tl-date">${dt}</span></div></div>`;
   });
   const mktFull=MKT[r.market]?` · ${MKT[r.market]}`:'';
